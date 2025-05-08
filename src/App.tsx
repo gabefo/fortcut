@@ -1,18 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { useEffect, useMemo, useState } from 'react';
 import { AspectRatioSelector } from './components/AspectRatioSelector';
 import { ExportButton } from './components/ExportButton';
-import { ImportButton } from './components/ImportButton';
 import { OverlaysPanel } from './components/OverlaysPanel';
+import { Button } from './components/ui/Button';
 import { VideoCanvas } from './components/VideoCanvas';
 import { VideoPlayButton } from './components/VideoControls';
 import { VideoTimeline } from './components/VideoTimeline';
 import { VideoTimestamp } from './components/VideoTimestamp';
+import { useUploadVideo } from './hooks/useUploadVideo';
 import { Overlay } from './types';
 import { point, rect } from './utils';
 
 export default function App() {
-  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const { upload, video, file, isLoading } = useUploadVideo();
+
   const [aspectRatio, setAspectRatio] = useState('4:5');
   const [overlays, setOverlays] = useState<Overlay[]>([]);
   const [startTime, setStartTime] = useState(0);
@@ -51,15 +53,12 @@ export default function App() {
     };
   }, [endTime, startTime, video]);
 
-  const visibleOverlays = useMemo(() => overlays.filter(({ visible }) => visible), [overlays]);
+  useEffect(() => {
+    if (!video) return;
 
-  const onVideoLoaded = useCallback((video: HTMLVideoElement, file: File) => {
     const { videoWidth, videoHeight } = video;
-
     const scale = videoWidth / 1920;
 
-    setVideo(video);
-    setFile(file);
     setOverlays([
       {
         name: 'Minimap',
@@ -92,12 +91,17 @@ export default function App() {
     ]);
     setStartTime(0);
     setEndTime(video.duration);
-  }, []);
+  }, [video]);
+
+  const visibleOverlays = useMemo(() => overlays.filter(({ visible }) => visible), [overlays]);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100 select-none">
       <header className="flex h-16 shrink-0 items-center border-b border-zinc-700 bg-zinc-800 px-4">
-        <ImportButton onLoaded={onVideoLoaded} />
+        <Button onClick={upload}>
+          <ArrowUpTrayIcon />
+          Import
+        </Button>
       </header>
 
       {video && file && (
@@ -109,6 +113,11 @@ export default function App() {
 
             <div className="relative flex-1 overflow-hidden">
               <VideoCanvas video={video} aspectRatio={aspectRatio} overlays={visibleOverlays} />
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-sm text-zinc-100">
+                  Loading...
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-6 p-4">
