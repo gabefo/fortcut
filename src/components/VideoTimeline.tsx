@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useDrag } from '../hooks/useDrag';
 import { clamp } from '../utils/clamp';
 import { formatDuration } from '../utils/formatDuration';
 import { round } from '../utils/round';
@@ -27,9 +28,41 @@ export const VideoTimeline: React.FC<Props> = ({
   onStartTimeChange,
   onEndTimeChange,
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const startHandleRef = useRef<HTMLDivElement>(null);
   const endHandleRef = useRef<HTMLDivElement>(null);
   const seekHandleRef = useRef<HTMLDivElement>(null);
+
+  useDrag(ref, {
+    onDragStart: ({ target, clientX }) => {
+      video.pause();
+
+      if (target !== startHandleRef.current && target !== endHandleRef.current) {
+        const time = calculateTime(ref.current!, clientX, video.duration);
+        video.currentTime = clamp(time, startTime, endTime);
+      }
+    },
+    onDrag: ({ target, clientX }) => {
+      const { duration } = video;
+      const time = calculateTime(ref.current!, clientX, duration);
+
+      if (target === startHandleRef.current) {
+        const newStartTime = clamp(time, 0, endTime - 0.1);
+        onStartTimeChange(newStartTime);
+        if (video.currentTime < newStartTime) {
+          video.currentTime = newStartTime;
+        }
+      } else if (target === endHandleRef.current) {
+        const newEndTime = clamp(time, startTime + 0.1, duration);
+        onEndTimeChange(newEndTime);
+        if (video.currentTime > newEndTime) {
+          video.currentTime = newEndTime;
+        }
+      } else {
+        video.currentTime = clamp(time, startTime, endTime);
+      }
+    },
+  });
 
   useEffect(() => {
     const seek = seekHandleRef.current;
@@ -51,59 +84,8 @@ export const VideoTimeline: React.FC<Props> = ({
     };
   }, [video]);
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement;
-      target.setPointerCapture(e.pointerId);
-      video.pause();
-      if (target !== startHandleRef.current && target !== endHandleRef.current) {
-        const time = calculateTime(e.currentTarget, e.clientX, video.duration);
-        video.currentTime = clamp(time, startTime, endTime);
-      }
-    },
-    [endTime, startTime, video]
-  );
-
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    target.releasePointerCapture(e.pointerId);
-  }, []);
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const target = e.target as HTMLElement;
-
-      if (!target.hasPointerCapture(e.pointerId)) return;
-
-      const { duration } = video;
-      const time = calculateTime(e.currentTarget, e.clientX, duration);
-
-      if (target === startHandleRef.current) {
-        const newStartTime = clamp(time, 0, endTime - 0.1);
-        onStartTimeChange(newStartTime);
-        if (video.currentTime < newStartTime) {
-          video.currentTime = newStartTime;
-        }
-      } else if (target === endHandleRef.current) {
-        const newEndTime = clamp(time, startTime + 0.1, duration);
-        onEndTimeChange(newEndTime);
-        if (video.currentTime > newEndTime) {
-          video.currentTime = newEndTime;
-        }
-      } else {
-        video.currentTime = clamp(time, startTime, endTime);
-      }
-    },
-    [endTime, onEndTimeChange, onStartTimeChange, startTime, video]
-  );
-
   return (
-    <div
-      className="relative h-16"
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerMove={handlePointerMove}
-    >
+    <div ref={ref} className="relative h-16">
       <div
         className="absolute h-full rounded-lg ring-2 ring-violet-600 ring-inset"
         style={{
