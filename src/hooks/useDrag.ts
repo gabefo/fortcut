@@ -5,12 +5,8 @@ const getCoordinates = (e: MouseEvent | TouchEvent) => {
     return { clientX: e.clientX, clientY: e.clientY };
   }
 
-  if (e.touches.length > 0) {
-    const touch = e.touches[0];
-    return { clientX: touch.clientX, clientY: touch.clientY };
-  }
-
-  return { clientX: 0, clientY: 0 };
+  const touch = e.touches[0] || e.changedTouches[0];
+  return { clientX: touch.pageX || touch.clientX, clientY: touch.pageY || touch.clientY };
 };
 
 type DragCallback = (info: {
@@ -65,16 +61,12 @@ export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Optio
     };
 
     const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-
       const { clientX, clientY } = getCoordinates(e);
 
       dragHandle.current?.({ target, clientX, clientY });
     };
 
     const handleMouseUp = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-
       const { clientX, clientY } = getCoordinates(e);
 
       stopHandle.current?.({ target, clientX, clientY });
