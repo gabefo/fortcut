@@ -34,7 +34,7 @@ export const VideoTimeline: React.FC<Props> = ({
   const seekHandleRef = useRef<HTMLDivElement>(null);
 
   useDrag(ref, {
-    onDragStart: ({ target, clientX }) => {
+    onStart: ({ target, clientX }) => {
       video.pause();
 
       if (target !== startHandleRef.current && target !== endHandleRef.current) {

@@ -13,33 +13,33 @@ const getCoordinates = (e: MouseEvent | TouchEvent) => {
   return { clientX: 0, clientY: 0 };
 };
 
-type DragInfo = {
+type DragCallback = (info: {
   target: EventTarget | null;
   clientX: number;
   clientY: number;
-};
+}) => void;
 
 type Options = {
-  onDrag?: (info: DragInfo) => void;
-  onDragStart?: (info: DragInfo) => void;
-  onDragEnd?: (info: DragInfo) => void;
+  onDrag?: DragCallback;
+  onStart?: DragCallback;
+  onStop?: DragCallback;
 };
 
 export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Options) => {
   const dragHandle = useRef(options.onDrag);
-  const dragStartHandle = useRef(options.onDragStart);
-  const dragEndHandle = useRef(options.onDragEnd);
+  const startHandle = useRef(options.onStart);
+  const stopHandle = useRef(options.onStop);
 
   if (dragHandle.current !== options.onDrag) {
     dragHandle.current = options.onDrag;
   }
 
-  if (dragStartHandle.current !== options.onDragStart) {
-    dragStartHandle.current = options.onDragStart;
+  if (startHandle.current !== options.onStart) {
+    startHandle.current = options.onStart;
   }
 
-  if (dragEndHandle.current !== options.onDragEnd) {
-    dragEndHandle.current = options.onDragEnd;
+  if (stopHandle.current !== options.onStop) {
+    stopHandle.current = options.onStop;
   }
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Optio
 
       target = e.target;
 
-      dragStartHandle.current?.({ target, clientX, clientY });
+      startHandle.current?.({ target, clientX, clientY });
 
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('touchmove', handleMouseMove);
@@ -77,7 +77,7 @@ export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Optio
 
       const { clientX, clientY } = getCoordinates(e);
 
-      dragEndHandle.current?.({ target, clientX, clientY });
+      stopHandle.current?.({ target, clientX, clientY });
 
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleMouseMove);
