@@ -96,7 +96,7 @@ export default function App() {
   const visibleOverlays = useMemo(() => overlays.filter(({ visible }) => visible), [overlays]);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100 select-none">
+    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-zinc-950 text-zinc-100 select-none">
       <header className="flex h-16 shrink-0 items-center border-b border-zinc-700 bg-zinc-800 px-4">
         <Button onClick={upload}>
           <ArrowUpTrayIcon />

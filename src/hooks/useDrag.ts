@@ -50,6 +50,8 @@ export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Optio
     let target: EventTarget | null;
 
     const handleMouseDown = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+
       const { clientX, clientY } = getCoordinates(e);
 
       target = e.target;
@@ -63,12 +65,16 @@ export const useDrag = (ref: React.RefObject<HTMLElement | null>, options: Optio
     };
 
     const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+
       const { clientX, clientY } = getCoordinates(e);
 
       dragHandle.current?.({ target, clientX, clientY });
     };
 
     const handleMouseUp = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+
       const { clientX, clientY } = getCoordinates(e);
 
       dragEndHandle.current?.({ target, clientX, clientY });
