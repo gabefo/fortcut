@@ -6,7 +6,7 @@ const getCoordinates = (e: MouseEvent | TouchEvent) => {
   }
 
   const touch = e.touches[0] || e.changedTouches[0];
-  return { clientX: touch.pageX || touch.clientX, clientY: touch.pageY || touch.clientY };
+  return { clientX: touch.pageX ?? touch.clientX, clientY: touch.pageY ?? touch.clientY };
 };
 
 type DragCallback = (info: {
